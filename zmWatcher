@@ -6,26 +6,29 @@ use ZoneMinder;
 
 $| = 1;
 
-my $db = 'zm';
-my $host = 'localhost';
-my $user = 'zabbix';
-my $pass = 'zabbix';
-my $hostname = 'Hostname';
-my $dsn = "DBI:mysql:$db;host=$host";
-my $zabbix_server = '192.168.1.254';
-my $max_update_interval = '3540';
+my $db = 'zm'; #Zoneminder database name
+my $host = 'localhost'; #Zoneminder database server
+my $user = 'zabbix'; #Zoneminder database read only account
+my $pass = 'zabbix'; #Zoneminder database read only password
+my $hostname = 'Hostname'; #Zabbix front-end defined hostname for Zoneminder server
+my $dsn = "DBI:mysql:$db;host=$host"; #DSN
+my $zabbix_server = '192.168.1.254'; #Zabbix server
+my $max_update_interval = '3540'; #Update interval in seconds for Active/Signal/State
 
-#zmDbgInit( "zoneminderWatcher", level=>0, to_log=>0, to_syslog=>0, to_term=>1 );
-
+#Discovery command for Zabbix
 my $cmdDiscovery = "zabbix_sender -z $zabbix_server -s $hostname -k zoneminder.monitor.discovery -o '{\"data\":[{\"{\#MONITOR}\":\"%s\"}]}'";
+#Data update for Zoneminder into Zabbix
 my $command = "zabbix_sender -z $zabbix_server -s $hostname -k zoneminder.monitor[%s,%s] -o %d";
+#SQL query to find all defined monitors
 my $sql = "SELECT * FROM Monitors";
 
+#Init some arrays
 my @monitors = ();
 my @monitors_states = ();
 my @monitors_signal = ();
 my @monitors_active = ();
 
+# Will update $monitors
 sub get_monitors {
 
     #Connect and get data
@@ -47,6 +50,7 @@ sub get_monitors {
     $dbh->disconnect;
 }
 
+#I'm new to perl, and this is how I'm handling noval
 sub noval_iszero {
     if ( not defined ($_[0]) )
     {
@@ -55,6 +59,7 @@ sub noval_iszero {
     return $_[0];
 }
 
+#Update monitors
 get_monitors();
 
 # Get initial readings
@@ -74,9 +79,11 @@ foreach my $x (0..$#monitors)
 
 my $start = time;
 
+#infinite Loop
 while( 1 )
 {
     print ( sprintf("Seconds until next update: %d\n",$max_update_interval - (time-$start) ));
+    #Loop each monitor
     foreach my $monitor_count (0..$#monitors)
     {
         my $updated = 0;
@@ -124,9 +131,13 @@ while( 1 )
 
         if ( $updated )
         {
+            #Reset last update time
             $start = time;
         }
     }
+    #Get update monitors
     get_monitors();
+
+    #Wait 10 seconds between checks
     sleep( 10 );
 }
