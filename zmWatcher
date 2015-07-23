@@ -10,9 +10,9 @@ my $db = 'zm';
 my $host = 'localhost';
 my $user = 'zabbix';
 my $pass = 'zabbix';
-my $hostname = 'Humes850CameraDVR';
+my $hostname = 'Hostname';
 my $dsn = "DBI:mysql:$db;host=$host";
-my $zabbix_server = '10.17.21.131';
+my $zabbix_server = '192.168.1.254';
 my $max_update_interval = '3540';
 
 #zmDbgInit( "zoneminderWatcher", level=>0, to_log=>0, to_syslog=>0, to_term=>1 );
